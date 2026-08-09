@@ -1,0 +1,1 @@
+// Archivo principal para el sensor del bastón
