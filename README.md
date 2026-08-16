@@ -31,6 +31,11 @@ Para validar la corrección matemática implementada en el código, se verificó
 
 **Tolerancia del proyecto:** Considerando la naturaleza del proyecto (detección de obstáculos para evitar colisiones peatonales), se declara una tolerancia aceptable de **± 2 cm**. Esta tolerancia se considera adecuada, ya que pequeñas variaciones en este rango no afectan el tiempo de reacción necesario para alertar al usuario mediante la respuesta háptica (vibración) y sonora de forma segura.
 
+### Filtro de Ruido y Criterio de Elección de N
+Para mitigar el ruido inherente a la lectura de sensores espaciales y evitar falsos positivos, se implementó un **Filtro de Mediana** con una ventana de **N = 5**. 
+
+**Criterio de elección:** Se descartó la media móvil porque promedia y arrastra los errores (como los "ecos" falsos del ultrasonido). En su lugar, el filtro de mediana descarta instantáneamente los picos de ruido. El tamaño de la ventana ($N=5$) se seleccionó como el equilibrio óptimo para el bastón: un $N$ menor no filtraría eficientemente las anomalías, mientras que un $N$ mayor (por ejemplo, 10 o 15) introduciría un retardo computacional prolongado. En un dispositivo de asistencia para la marcha, el tiempo real es crítico; un retardo excesivo provocaría que el usuario impacte el obstáculo antes de recibir la alerta háptica.
+
 ## Integrantes y Roles
 * **Cristóbal Millares:** Project Manager & QA
 * **Martin Salinas:** Firmware & Lógica Edge
