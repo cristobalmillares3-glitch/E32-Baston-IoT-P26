@@ -1,12 +1,35 @@
 # P26 – Bastón de asistencia para discapacidad visual
 
-**Curso:** Fundamentos de IoT — 2º Semestre 2026, Universidad Autónoma de Chile
-**Equipo:** E32
+**Curso:** Fundamentos de IoT — 2º Semestre 2026, Universidad Autónoma de Chile  
+**Equipo:** E32  
 
 ## Descripción del Proyecto
-Sistema IoT diseñado para personas con discapacidad visual que detecta obstáculos a la altura del pecho o la cabeza[cite: 1]. El sistema captura información del entorno en tiempo real mediante sensores ultrasónicos (HC-SR04 / VL53L0X) y la procesa en un ESP32 para emitir respuestas instantáneas mediante vibración y sonido antes del contacto. 
+Sistema IoT diseñado para personas con discapacidad visual que detecta obstáculos a la altura del pecho o la cabeza. El sistema captura información del entorno en tiempo real mediante sensores ultrasónicos (HC-SR04 / VL53L0X) y la procesa en un ESP32 para emitir respuestas instantáneas mediante vibración y sonido antes del contacto. 
 
 Además, incluye un módulo GPS (NEO-6M) que transmite la ubicación en vivo mediante MQTT hacia un panel seguro (Node-RED e InfluxDB), permitiendo a un cuidador monitorear la posición del usuario.
+
+## Calibración y Corrección de Sensores
+De acuerdo con los requerimientos de la asignatura, se realizó el proceso de medición utilizando valores de referencia para calcular y aplicar la corrección lineal de lecturas en el firmware del ESP32.
+
+### Simulación en Wokwi
+Para preparar el entorno de simulación en Wokwi, se ajustaron los siguientes parámetros en los componentes virtuales:
+* **Ganancia (Gain) Wokwi:** 85
+* **Offset Wokwi:** 1.30
+
+### Valores de Referencia y Cálculo de Recta
+Se utilizaron las siguientes distancias de prueba ($r$) entregadas para la calibración:
+* **Punto de referencia 1 ($r_1$):** 9
+* **Punto de referencia 2 ($r_2$):** 34
+
+A partir de las mediciones en estos dos puntos, se despejaron la ganancia ($m$) y el offset ($b$) para ajustar la ecuación de la recta y aplicar la corrección directamente en el firmware:
+* **Ganancia Calculada ($m$):** 0.951940
+* **Offset Calculado ($b$):** 1.895092
+
+### Verificación y Tolerancia
+Para validar la corrección matemática implementada en el código, se verificó el sistema en un tercer punto de prueba distinto:
+* **Punto de verificación ($r_3$):** 20.5
+
+**Tolerancia del proyecto:** Considerando la naturaleza del proyecto (detección de obstáculos para evitar colisiones peatonales), se declara una tolerancia aceptable de **± 2 cm**. Esta tolerancia se considera adecuada, ya que pequeñas variaciones en este rango no afectan el tiempo de reacción necesario para alertar al usuario mediante la respuesta háptica (vibración) y sonora de forma segura.
 
 ## Integrantes y Roles
 * **Cristóbal Millares:** Project Manager & QA
