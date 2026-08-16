@@ -12,7 +12,7 @@ Además, incluye un módulo GPS (NEO-6M) que transmite la ubicación en vivo med
 De acuerdo con los requerimientos de la asignatura, se realizó el proceso de medición utilizando valores de referencia para calcular y aplicar la corrección lineal de lecturas en el firmware del ESP32.
 
 ### Simulación en Wokwi
-https://wokwi.com/projects/472279508231864321
+https://wokwi.com/projects/472482044001085441
 Para preparar el entorno de simulación en Wokwi, se ajustaron los siguientes parámetros en los componentes virtuales:
 * **Ganancia (Gain) Wokwi:** 85
 * **Offset Wokwi:** 1.30
