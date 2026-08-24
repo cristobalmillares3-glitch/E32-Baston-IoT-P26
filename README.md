@@ -36,13 +36,15 @@ Para validar la corrección matemática implementada en el código, se verificó
 Para mitigar el ruido inherente a la lectura de sensores espaciales y evitar falsos positivos, se implementó un **Filtro de Mediana** con una ventana de **N = 5**. 
 
 **Criterio de elección:** Se descartó la media móvil porque promedia y arrastra los errores (como los "ecos" falsos del ultrasonido). En su lugar, el filtro de mediana descarta instantáneamente los picos de ruido. El tamaño de la ventana ($N=5$) se seleccionó como el equilibrio óptimo para el bastón: un $N$ menor no filtraría eficientemente las anomalías, mientras que un $N$ mayor (por ejemplo, 10 o 15) introduciría un retardo computacional prolongado. En un dispositivo de asistencia para la marcha, el tiempo real es crítico; un retardo excesivo provocaría que el usuario impacte el obstáculo antes de recibir la alerta háptica.
-
 ## Calibración y Caracterización del Sensor (GT1)
 
-### 1. Parámetros de Calibración
-- *Pendiente ($m$ / Sensibilidad):* 0.88 unidades/cm
-- *Offset / Tara ($b$):* 2.7 unidades
-- *Ecuación de corrección:* Distancia (cm) = (Lectura - 2.7) / 0.88
+## 1. Parámetros de Calibración
+
+* **Pendiente (m / Sensibilidad):** 0.88 unidades/cm
+* **Offset / Tara (b):** 2.7 unidades
+
+**Ecuación de corrección:**
+`Distancia (cm) = (Lectura - 2.7) / 0.88`
 
 ### 2. Tabla Comparativa: Físico vs. Simulación
 | Parámetro / Punto | Patrón de Referencia | Medición Simulación (GT1) | Medición Física (ESP32) | Desviación Absoluta | Tolerancia Declarada | Estado |
@@ -53,7 +55,7 @@ Para mitigar el ruido inherente a la lectura de sensores espaciales y evitar fal
 ### 3. Registro Metrológico
 - *Patrón empleado:* Regla graduada / cinta métrica (resolución: 1 mm).
 - *Línea base:* Offset estático de +2.7 unidades en reposo relativo a 0 cm.
-  
+
 ## Integrantes y Roles
 * **Cristóbal Millares:** Project Manager & QA
 * **Martin Salinas:** Firmware & Lógica Edge
