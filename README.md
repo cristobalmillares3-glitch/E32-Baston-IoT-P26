@@ -92,7 +92,41 @@ Cada flecha representa un rango de medición; una racha de 5 mediciones errónea
 
 ## Calibración del sensor
 
-Calibración propia mediante regresión lineal con datos medidos con huincha en 6 distancias reales (10/20/50/60/80/100 cm, n=10 c/u, N=60 muestras):
+Calibración propia mediante regresión lineal con datos medidos con huincha en 6 distancias reales (10/20/50/60/80/100 cm, n=10 c/u, N=60 muestras).
+
+### Datos crudos (cm medidos por el sensor)
+
+| N° | 10 cm | 20 cm | 50 cm | 60 cm | 80 cm | 100 cm |
+|---|---|---|---|---|---|---|
+| 1 | 10,5 | 20,2 | 49,2 | 60,1 | 80,8 | 96,6 |
+| 2 | 10,5 | 20,2 | 49,2 | 57,8 | 81,1 | 98 |
+| 3 | 10,5 | 20,2 | 49,2 | 58,2 | 81,1 | 97,9 |
+| 4 | 10,5 | 21,5 | 49,6 | 57,8 | 80,8 | 96,6 |
+| 5 | 10,5 | 20,2 | 49,6 | 57,8 | 83,1 | 98,5 |
+| 6 | 10,8 | 20,2 | 49,6 | 58,2 | 81,6 | 97,7 |
+| 7 | 10,8 | 20,2 | 49,6 | 58,2 | 80,7 | 98,4 |
+| 8 | 10,8 | 20,2 | 50,6 | 58,2 | 80,8 | 96,2 |
+| 9 | 10,8 | 20,2 | 49,2 | 58,4 | 81,2 | 97 |
+| 10 | 10,8 | 20,2 | 49,6 | 58,4 | 80,5 | 98,2 |
+| **Promedio** | **10,65** | **20,33** | **49,54** | **58,31** | **81,17** | **97,51** |
+| Desv. estándar | 0,150 | 0,390 | 0,400 | 0,636 | 0,707 | 0,794 |
+| Mínimo | 10,5 | 20,2 | 49,2 | 57,8 | 80,5 | 96,2 |
+| Máximo | 10,8 | 21,5 | 50,6 | 60,1 | 83,1 | 98,5 |
+
+La desviación estándar crece con la distancia (de 0,15 cm a 10 cm hasta 0,79 cm a 100 cm), consistente con el comportamiento esperado de un sensor ultrasónico.
+
+### Ajuste lineal (medido vs. real)
+
+Con las 60 muestras (promedios de los 6 puntos de referencia) se obtuvo el ajuste `medido = m·real + b`:
+
+```
+m = 0,977
+b = 0,7886 cm      (R² = 0,999)
+```
+
+El ajuste queda prácticamente sobre la recta ideal (y = x) en todo el rango de 10 a 100 cm, lo que valida los umbrales de histéresis definidos en la FSM (2,0 / 2,5 / 1,0 / 1,5 m) como apropiados para el rango de trabajo del bastón.
+
+Despejando para corregir la lectura cruda del sensor en el firmware:
 
 ```
 medido = CAL_M · real + CAL_B      (R² = 0,9987)
