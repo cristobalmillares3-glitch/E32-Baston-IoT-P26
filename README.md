@@ -13,6 +13,7 @@
 - [Máquina de estados (FSM)](#máquina-de-estados-fsm)
 - [Calibración del sensor](#calibración-del-sensor)
 - [Plan de datos y MQTT](#plan-de-datos-y-mqtt)
+- [GT6: Grafana, alertas y comando por Node-RED](#gt6-grafana-alertas-y-comando-por-node-red)
 - [Alimentación del nodo](#alimentación-del-nodo)
 - [Privacidad y consentimiento](#privacidad-y-consentimiento)
 - [Alcance e hitos](#alcance-e-hitos)
@@ -149,6 +150,66 @@ El timeout de disparo (`TIMEOUT_US = 12000`) está ajustado a ~2,06 m, el alcanc
 
 **Pregunta analítica (≥3 semanas de datos propios):** ¿Cuál es la distribución de las distancias de detección durante el tiempo de uso, y qué proporción corresponde a detecciones críticas? Se espera encontrar patrones de detección/uso del sensor, que pueden verse afectados por desajustes del sensor.
 
+## GT6: Grafana, alertas y comando por Node-RED
+
+Dashboard de observabilidad, alerta con «for» y primer comando de vuelta al nodo (Node-RED → `/cmd` → ESP32). Dato principal: `distancia_cm` (equipo E32, proyecto P26, `nodo1`).
+
+### Dashboard `[E32] Bastón de asistencia para discapacidad visual`
+
+| Panel | Tipo | Field | Configuración | Justificación |
+|---|---|---|---|---|
+| 1 | Time series | `distancia_cm`, 24 h | Unidad en cm en el eje, título descriptivo | Muestra la evolución de la distancia medida |
+| 2 | Stat | `distancia_cm`, último valor | Thresholds: verde como base, rojo bajo 90 cm | Estado actual de un vistazo |
+| 3 (propio) | State timeline | `estado`, 24 h | Mapeo 0 a 4 con colores | El estado de la FSM es discreto: el panel muestra cuánto dura cada uno |
+
+### Alerta
+
+Consulta de la regla (rango fijo de 5 min), con Reduce (Last) y Threshold «is below» 90:
+
+```flux
+from(bucket: "mediciones")
+  |> range(start: -5m)
+  |> filter(fn: (r) => r._measurement == "mediciones")
+  |> filter(fn: (r) => r.equipo == "E32" and
+                       r.proyecto == "P26" and
+                       r.nodo == "nodo1")
+  |> filter(fn: (r) => r._field == "distancia_cm")
+```
+
+Evaluación cada 1 min, período «for» de 2 min, etiqueta `equipo = E32`. Ciclo esperado con el fenómeno real: Normal → Pending → Firing → Normal.
+
+### Justificación de la alerta
+
+**(a) Umbral y origen.** El umbral es **90 cm** (la distancia debe estar *por debajo*). Proviene del charter y de la FSM de la GT2: el nodo entra a `OBSTACULO_CERCA` cuando `distancia_cm` baja de 90 cm. El resto de la FSM usa histéresis:
+
+| Transición | Condición |
+|---|---|
+| `REPOSO` → `OBSTACULO_LEJOS` | distancia bajo 170 cm |
+| `OBSTACULO_LEJOS` → `REPOSO` | distancia sobre 190 cm |
+| `OBSTACULO_LEJOS` → `OBSTACULO_CERCA` | distancia bajo 90 cm |
+| `OBSTACULO_CERCA` → `OBSTACULO_LEJOS` | distancia sobre 110 cm |
+
+La alerta usa solo el umbral de 90 cm, el mismo que dispara `OBSTACULO_CERCA`.
+
+**(b) σ y margen.** σ = **0,5 cm**, de la calibración posterior a la GT1 (ver [Calibración del sensor](#calibración-del-sensor); cerca de 100 cm la desviación llega a 0,79 cm). Con el valor normal de operación en `REPOSO` (sobre 190 cm), el margen hasta el umbral es de al menos 100 cm: **200σ** con σ = 0,5 cm y todavía unas 126σ con el peor caso medido (0,79 cm). El ruido del sensor no puede cruzar el umbral por sí solo; la alerta solo se activa con un obstáculo real a menos de 90 cm. La banda de histéresis entre 90 y 110 cm (20 cm) también supera ampliamente 3σ.
+
+**(c) Período «for» de 2 minutos.** Exige que la condición se sostenga durante 2 evaluaciones consecutivas, de modo que una lectura aislada o el paso breve de un objeto no dispare la alerta. Es adecuado para un obstáculo que permanece cerca; si se necesitara reacción más rápida, bastaría 1 min.
+
+**(d) Si el nodo deja de publicar.** La consulta mira solo los últimos 5 minutos. Tras más de 5 minutos sin datos la consulta no devuelve nada y la regla pasa a **NoData** (no a Firing ni a Normal). Así un nodo caído se distingue de un obstáculo real.
+
+### Flujo Node-RED y comando al nodo
+
+- **Rama de lectura:** `mqtt in` (tópico del nodo, QoS 1, salida «a String») → `json` → `debug`.
+- **Rama de comando:** dos `inject` (`ON` y `OFF`) → `function` → `mqtt out` (tópico `.../cmd`, QoS 1, retain = false). La función solo acepta `ON` y `OFF` y publica `{"cmd": "ON"}` o `{"cmd": "OFF"}`.
+- **ESP32:** `onMqttMessage()` solo registra el comando; la FSM decide. `ON` produce la transición `NORMAL` → `ACTUANDO_REMOTO` y enciende un indicador; `OFF` o superar `T_MAX_MS` (60 s) vuelven a `NORMAL`. En estados de alarma o error local el comando remoto se ignora: manda la lógica local.
+
+### Archivos de la entrega
+
+- `grafana/dashboard.json`
+- `nodered/flujo.json` (sin credenciales)
+- `firmware/`: sketch con `onMqttMessage()` y la FSM actualizados
+- `img/`: capturas del dashboard y de la regla en estado Firing
+
 ## Alimentación del nodo
 
 Nodo a **batería** (2 celdas 18650 en serie, 7,4 V nominal) — es un dispositivo portátil; un cable anularía su función.
@@ -196,7 +257,10 @@ Nodo a **batería** (2 celdas 18650 en serie, 7,4 V nominal) — es un dispositi
 ## Estructura del repositorio
 
 ```
-├── firmware/           # Sketches del ESP32 (FSM, sensores, actuadores, GPS)
+├── firmware/           # Sketches del ESP32 (FSM, sensores, actuadores, GPS, comando /cmd)
+├── grafana/            # dashboard.json (GT6)
+├── nodered/            # flujo.json (GT6)
+├── img/                # Capturas del dashboard y de la alerta en Firing (GT6)
 ├── simulacion/         # Proyectos Wokwi (GT1: cadena de adquisición y calibración)
 ├── docs/               # Fichas técnicas (alimentación del nodo, diagramas, ED)
 └── README.md
