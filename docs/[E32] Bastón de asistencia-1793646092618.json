@@ -1,0 +1,324 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": 63,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dfuiwmzpdasjkb"
+      },
+      "description": "Distancia corregida con la calibración propia. Se omite cuando no hay eco o hay ERROR_SEGURO (hueco = nada en rango o falla).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMax": 200,
+            "axisSoftMin": 0,
+            "barAlignment": 0,
+            "drawStyle": "points",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed+area"
+            }
+          },
+          "decimals": 1,
+          "displayName": "Distancia",
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 90
+              },
+              {
+                "color": "green",
+                "value": 170
+              }
+            ]
+          },
+          "unit": "suffix:cm"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dfuiwmzpdasjkb"
+          },
+          "query": "from(bucket: \"mediciones\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"mediciones\")\n  |> filter(fn: (r) => r.equipo == \"E32\" and r.proyecto == \"P26\" and r.nodo == \"nodo1\")\n  |> filter(fn: (r) => r._field == \"distancia_cm\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: true)",
+          "refId": "A"
+        }
+      ],
+      "title": "Distancia al obstáculo (umbrales de la FSM: 90 y 170 cm)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dfuiwmzpdasjkb"
+      },
+      "description": "Último valor de distancia_cm. Rojo < 90 cm (OBSTACULO_CERCA), naranjo 90-170 cm (OBSTACULO_LEJOS), verde > 170 cm.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "displayName": "Distancia actual",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 90
+              },
+              {
+                "color": "green",
+                "value": 170
+              }
+            ]
+          },
+          "unit": "suffix:cm"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dfuiwmzpdasjkb"
+          },
+          "query": "from(bucket: \"mediciones\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"mediciones\")\n  |> filter(fn: (r) => r.equipo == \"E32\" and r.proyecto == \"P26\" and r.nodo == \"nodo1\")\n  |> filter(fn: (r) => r._field == \"distancia_cm\")\n  |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "¿Cómo está ahora?",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "dfuiwmzpdasjkb"
+      },
+      "description": "Campo estado: 0 REPOSO, 1 OBSTACULO_LEJOS, 2 OBSTACULO_CERCA, 3 ERROR_SEGURO, 4 ACTUANDO_REMOTO (comando ON desde Node-RED).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "custom": {
+            "fillOpacity": 80,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "displayName": "Estado de la FSM",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "REPOSO"
+                },
+                "1": {
+                  "color": "yellow",
+                  "index": 1,
+                  "text": "OBSTACULO_LEJOS"
+                },
+                "2": {
+                  "color": "dark-red",
+                  "index": 2,
+                  "text": "OBSTACULO_CERCA"
+                },
+                "3": {
+                  "color": "dark-purple",
+                  "index": 3,
+                  "text": "ERROR_SEGURO"
+                },
+                "4": {
+                  "color": "text",
+                  "index": 4,
+                  "text": "ACTUANDO_REMOTO"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 3,
+      "options": {
+        "alignValue": "left",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "mergeValues": true,
+        "rowHeight": 0.9,
+        "showValue": "auto",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "dfuiwmzpdasjkb"
+          },
+          "query": "from(bucket: \"mediciones\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"mediciones\")\n  |> filter(fn: (r) => r.equipo == \"E32\" and r.proyecto == \"P26\" and r.nodo == \"nodo1\")\n  |> filter(fn: (r) => r._field == \"estado\")\n  |> aggregateWindow(every: 10s, fn: last, createEmpty: true)",
+          "refId": "A"
+        }
+      ],
+      "title": "¿Qué hacía el bastón? Estado de la FSM (local vs. comando remoto)",
+      "type": "state-timeline"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [
+    "GT6",
+    "E32",
+    "P26"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "[E32] Bastón de asistencia",
+  "uid": "e32-p26-baston",
+  "version": 2,
+  "weekStart": ""
+}
